@@ -1,39 +1,92 @@
 # MindMate
 
-MindMate is a Streamlit-based AI mental wellness companion that supports emotional check-ins, mood tracking, and stress insights.
+MindMate is a local Flask-based mental wellness companion for emotional check-ins, supportive conversation, and mood/stress tracking.
 
-## Features
-- Guided emotional chat with supportive responses
-- Crisis signal detection and safety-oriented alerts
-- Mood/stress tracking stored in a local database
-- Dashboard and analytics (stress trend + emotion distribution)
+It runs fully on your machine and serves a browser UI at localhost.
+
+## What It Does
+- Provides supportive chat responses based on detected emotional context
+- Detects potential crisis language and returns immediate support messaging
+- Classifies stress level from message content
+- Stores mood entries in a local SQLite database
+- Supports multiple chat sessions in the sidebar (create/switch/reset)
+
+## Tech Stack
+- Backend: Flask
+- NLP/ML: Hugging Face Transformers + Torch
+- Storage: SQLite
+- Frontend: HTML/CSS/JS (Jinja templates + static assets)
 
 ## Project Structure
-- `app.py` – Streamlit app entry point and UI
-- `emotion_model.py` – emotion detection setup
-- `stress_classifier.py` – stress level classification
-- `crisis_detector.py` – crisis signal checks
-- `response_generator.py` – response generation utilities
-- `database.py` – local persistence layer
-- `requirements.txt` – dependencies
+- [app.py](app.py): Main local server entrypoint and API routes
+- [emotion_model.py](emotion_model.py): Emotion model setup/inference
+- [stress_classifier.py](stress_classifier.py): Stress-level classification logic
+- [crisis_detector.py](crisis_detector.py): Crisis phrase detection and support resources
+- [response_generator.py](response_generator.py): Conversational and coping response generation
+- [database.py](database.py): SQLite database wrapper
+- [templates/local_home.html](templates/local_home.html): Home page template
+- [templates/local_index.html](templates/local_index.html): Chat page template
+- [static/local_style.css](static/local_style.css): Styles
+- [static/local_app.js](static/local_app.js): Frontend chat/session behavior
+- [requirements.txt](requirements.txt): Python dependencies
 
-## Run Locally
-1. Create and activate a virtual environment.
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Start the app:
-   ```bash
-   streamlit run app.py
-   ```
+## Prerequisites
+- Python 3.10+
+- A virtual environment is recommended
+- Internet access on first run (for model download)
 
-## Deploy (Streamlit Community Cloud)
-1. Push this folder to a GitHub repository.
-2. In Streamlit Community Cloud, create a new app from that repo.
-3. Set the main file path to `app.py`.
-4. Deploy.
+## Setup
+1. Create a virtual environment:
+```bash
+python -m venv .venv
+```
 
-## Notes
-- `mood_tracker.db` is local runtime data and excluded from git via `.gitignore`.
-- For production-grade deployments, consider moving persistence to a managed database and pinning dependency versions.
+2. Activate it (PowerShell):
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+## Run The App
+```bash
+python app.py
+```
+
+Open:
+- http://127.0.0.1:5000 (Home)
+- http://127.0.0.1:5000/chat (Chat)
+
+## How To Use
+1. Open Home and click Start a session.
+2. In Chat, type a message and send.
+3. Use + New Session to create a new chat thread.
+4. Click any session in the sidebar to switch to it.
+
+## API Endpoints
+- `GET /`: Home page
+- `GET /chat`: Chat page
+- `POST /api/message`: Send a message
+- `POST /api/new-session`: Create a new session
+- `POST /api/switch-session`: Switch active session
+- `POST /api/reset`: Clear current session messages
+
+## Data Storage
+- Chat session state is kept in browser session cookies/server session object.
+- Mood entries are stored in local SQLite:
+   - [mood_tracker.db](mood_tracker.db)
+
+## Troubleshooting
+- Port already in use:
+   - Stop the existing Python process or change port in [app.py](app.py).
+- First emotional message is slow:
+   - The model may be downloading/loading for the first time.
+- App does not start from `python app.py`:
+   - Confirm venv is active and dependencies are installed.
+
+## Important Note
+MindMate is a supportive tool, not a substitute for licensed professional care. If someone is in immediate danger, contact local emergency services or crisis support right away.
+

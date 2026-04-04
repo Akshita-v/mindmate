@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindMate Local</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='local_style.css') }}">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">MindMate</div>
+      <a class="top-link" href="{{ url_for('index') }}">Home</a>
+      <button id="newSessionBtn" class="btn btn-primary">+ New Session</button>
+
+      <div id="sessionList" class="session-list">
+        {% for s in sessions %}
+          {% set is_active = (s.id == current_session_id) %}
+          <button
+            class="session-card{% if is_active %} active{% endif %}"
+            data-session-id="{{ s.id }}"
+            type="button"
+          >
+            <div class="session-title">{% if is_active %}Current Session{% else %}{{ s.title }}{% endif %}</div>
+            <div class="session-date">{{ s.date }}</div>
+          </button>
+        {% endfor %}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <span class="top-link">Chat</span>
+      </header>
+
+      <section class="chat-wrap">
+        <div id="chatList" class="chat-list">
+          {% if not chat_history %}
+          <div class="message bot">
+            <div class="avatar">-</div>
+            <div class="bubble">
+              <p>Hey, glad you are here. I am MindMate.</p>
+              <p>What is on your mind today? You can tell me what kind of day you are having and what is contributing to it.</p>
+            </div>
+          </div>
+          {% endif %}
+
+          {% for chat in chat_history %}
+            <div class="message user">
+              <div class="bubble">{{ chat.user }}</div>
+            </div>
+
+            <div class="message bot">
+              <div class="avatar">-</div>
+              <div class="bubble">
+                <p>{{ chat.result.response }}</p>
+                {% if chat.result.conversation_type == 'emotional' %}
+                <div class="meta">Emotion: {{ chat.result.emotion.emotion|capitalize }} | Stress: {{ chat.result.stress.level }}</div>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <footer class="composer-wrap">
+          <form id="chatForm" class="composer" autocomplete="off">
+            <input id="messageInput" type="text" placeholder="Share what is on your mind..." required>
+            <button type="submit" class="send-btn">Send</button>
+          </form>
+          <p class="crisis-note">If you are in crisis, call 988 or text HOME to 741741.</p>
+        </footer>
+      </section>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='local_app.js') }}"></script>
+</body>
+</html>

@@ -352,7 +352,10 @@ class ResponseGenerator:
     def _normalize_stress_level(self, stress_level):
         if not stress_level:
             return ""
-        return str(stress_level).strip().lower()
+        normalized = str(stress_level).strip().lower()
+        if normalized == "medium":
+            return "moderate"
+        return normalized
 
     def _extract_context_hint(self, user_text):
         """Extract context clues for more personalized responses."""
@@ -494,61 +497,11 @@ class ResponseGenerator:
                 else:
                     lines.append("I see you showing up for yourself right now, and that takes strength. Keep going. 💙")
 
-            return "\n".join([line for line in lines if True])  # Keep all lines; some are spacers
+            return "\n".join(lines)
         
         except Exception as e:
             self.logger.error(f"Error generating response: {e}")
             return "I'm here to listen and understand. Your feelings matter. What's on your heart right now?"
-    
-    def get_coping_strategy(self, emotion, stress_level):
-        """
-        Get a targeted coping strategy based on emotion and stress.
-        
-        Args:
-            emotion (str): Detected emotion
-            stress_level (str): Low, Moderate, or High
-        
-        Returns:
-            dict: {
-                'technique_name': str,
-                'instructions': str,
-                'affirmation': str,
-                'tip': str
-            }
-        """
-        try:
-            # Select strategy based on emotion
-            if emotion in ['anxiety', 'fear']:
-                strategy = self.COPING_STRATEGIES.get('anxiety')
-            elif emotion == 'anger':
-                strategy = self.COPING_STRATEGIES.get('anger')
-            elif emotion == 'sadness':
-                strategy = self.COPING_STRATEGIES.get('sadness')
-            elif emotion == 'stress':
-                strategy = self.COPING_STRATEGIES.get('stress')
-            else:
-                strategy = self.COPING_STRATEGIES.get('default')
-            
-            # Add productivity tip if stressed
-            tip = ""
-            if stress_level in ['Moderate', 'High']:
-                tip = "\n\n**Study Break Suggestion:**\n" + random.choice(self.PRODUCTIVITY_TIPS)
-            
-            return {
-                'technique_name': strategy['technique_name'],
-                'instructions': strategy['instructions'],
-                'affirmation': strategy['affirmation'],
-                'tip': tip
-            }
-        
-        except Exception as e:
-            self.logger.error(f"Error getting coping strategy: {e}")
-            return {
-                'technique_name': 'Support Available',
-                'instructions': 'Consider reaching out to a friend, family member, or counselor.',
-                'affirmation': 'You are not alone. Help is available.',
-                'tip': ''
-            }
     
     def get_coping_strategy(self, emotion, stress_level):
         """
@@ -587,7 +540,13 @@ class ResponseGenerator:
                 'Low': "\n\n**Pro Tip:** Using these techniques now will make them feel natural when you really need them in tough moments."
             }
             
-            stress_label = stress_level.capitalize() if isinstance(stress_level, str) else 'Low'
+            normalized_stress = self._normalize_stress_level(stress_level)
+            if normalized_stress == 'high':
+                stress_label = 'High'
+            elif normalized_stress == 'moderate':
+                stress_label = 'Moderate'
+            else:
+                stress_label = 'Low'
             tip = strategy.get('tip', '') + stress_tips.get(stress_label, '')
             
             return {

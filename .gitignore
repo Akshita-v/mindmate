@@ -20,3 +20,4 @@ env/
 .DS_Store
 Thumbs.db
 .vscode/
+#https://mindmate-ec7fzt54pa3ywnfreapp5hq.streamlit.app/ (deployed app) is not working because of .vscode/ in .gitignore, so I have removed it from .gitignore file. Please let me know if you want to add it again.

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindMate Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='local_style.css') }}">
+</head>
+<body>
+  <div class="home-shell">
+    <header class="home-topbar">
+      <div class="brand">MindMate</div>
+      <a href="{{ url_for('chat') }}" class="btn btn-outline">Start a session</a>
+    </header>
+
+    <main class="home-main">
+      <span class="eyebrow">Your personal AI companion</span>
+      <h1 class="home-title">A safe space for your<br><span>thoughts and feelings</span></h1>
+      <p class="home-sub">
+        MindMate is a warm, empathetic companion that listens without judgment.
+        Share whatever is on your mind and get grounded support any time of day.
+      </p>
+      <a href="{{ url_for('chat') }}" class="btn btn-primary home-cta">Begin your first session</a>
+      <p class="home-note">Free to use. No account required.</p>
+    </main>
+  </div>
+</body>
+</html>
