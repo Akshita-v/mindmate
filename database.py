@@ -59,6 +59,29 @@ class MoodDatabase:
                 CREATE INDEX IF NOT EXISTS idx_timestamp 
                 ON mood_entries(timestamp)
             ''')
+
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS conversation_entries (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    session_id TEXT,
+                    user_input TEXT NOT NULL,
+                    bot_response TEXT NOT NULL,
+                    conversation_type TEXT,
+                    emotion TEXT,
+                    emotion_confidence REAL,
+                    stress_level TEXT,
+                    stress_score REAL,
+                    sentiment TEXT,
+                    tip TEXT,
+                    coping_json TEXT
+                )
+            ''')
+
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_conversation_timestamp
+                ON conversation_entries(timestamp)
+            ''')
             
             self.conn.commit()
             logger.info(f"Database initialized at {self.db_path}")
@@ -101,6 +124,50 @@ class MoodDatabase:
         
         except Exception as e:
             logger.error(f"Error adding mood entry: {e}")
+            return None
+
+    def add_conversation_entry(
+        self,
+        session_id,
+        user_input,
+        bot_response,
+        conversation_type,
+        emotion,
+        emotion_confidence,
+        stress_level,
+        stress_score,
+        sentiment='neutral',
+        tip='',
+        coping=None,
+    ):
+        """Store a full conversational turn for dashboard history."""
+        try:
+            cursor = self.conn.cursor()
+            coping_json = json.dumps(coping) if isinstance(coping, dict) else None
+            cursor.execute('''
+                INSERT INTO conversation_entries
+                (session_id, user_input, bot_response, conversation_type, emotion,
+                 emotion_confidence, stress_level, stress_score, sentiment, tip, coping_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                session_id,
+                user_input,
+                bot_response,
+                conversation_type,
+                emotion,
+                emotion_confidence,
+                stress_level,
+                stress_score,
+                sentiment,
+                tip,
+                coping_json,
+            ))
+
+            self.conn.commit()
+            return cursor.lastrowid
+
+        except Exception as e:
+            logger.error(f"Error adding conversation entry: {e}")
             return None
     
     def get_recent_entries(self, days=7):
@@ -167,6 +234,44 @@ class MoodDatabase:
         except Exception as e:
             logger.error(f"Error calculating emotion distribution: {e}")
             return {}
+
+    def get_recent_conversations(self, limit=8):
+        """Fetch the latest stored conversation turns for dashboard display."""
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute('''
+                SELECT id, timestamp, session_id, user_input, bot_response,
+                       conversation_type, emotion, emotion_confidence,
+                       stress_level, stress_score, sentiment, tip, coping_json
+                FROM conversation_entries
+                ORDER BY timestamp DESC, id DESC
+                LIMIT ?
+            ''', (limit,))
+
+            columns = [
+                'id', 'timestamp', 'session_id', 'user_input', 'bot_response',
+                'conversation_type', 'emotion', 'emotion_confidence',
+                'stress_level', 'stress_score', 'sentiment', 'tip', 'coping_json'
+            ]
+            rows = cursor.fetchall()
+            conversations = []
+            for row in rows:
+                item = dict(zip(columns, row))
+                coping_json = item.get('coping_json')
+                if coping_json:
+                    try:
+                        item['coping'] = json.loads(coping_json)
+                    except Exception:
+                        item['coping'] = None
+                else:
+                    item['coping'] = None
+                conversations.append(item)
+
+            return conversations
+
+        except Exception as e:
+            logger.error(f"Error retrieving recent conversations: {e}")
+            return []
     
     def get_stress_trends(self, days=7):
         """

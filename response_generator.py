@@ -5,8 +5,9 @@ Generates empathetic, emotion-appropriate responses and coping strategies
 based on detected emotion and stress level.
 """
 
-import random
 import logging
+import random
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,12 @@ class ConversationClassifier:
         "weather", "news", "time", "date", "calculate", "math",
         "translate", "buy", "purchase", "order", "shop",
     ]
+
+    @staticmethod
+    def _contains_pattern(text: str, pattern: str) -> bool:
+        """Match a pattern as a whole word or phrase, not a raw substring."""
+        escaped = re.escape(pattern.strip())
+        return re.search(rf"\b{escaped}\b", text) is not None
     
     @staticmethod
     def classify_conversation(user_text: str) -> str:
@@ -72,21 +79,27 @@ class ConversationClassifier:
         text = user_text.lower().strip()
         
         # 1. Crisis check (highest priority)
-        if any(pattern in text for pattern in ConversationClassifier.CRISIS_PATTERNS):
+        if any(ConversationClassifier._contains_pattern(text, pattern) for pattern in ConversationClassifier.CRISIS_PATTERNS):
             return "crisis"
         
         # 2. Informational request check
         # Only flag as informational if no emotional context
-        has_emotional_words = any(pattern in text for pattern in ConversationClassifier.EMOTIONAL_PATTERNS)
-        if not has_emotional_words and any(pattern in text for pattern in ConversationClassifier.INFORMATIONAL_PATTERNS):
+        has_emotional_words = any(
+            ConversationClassifier._contains_pattern(text, pattern)
+            for pattern in ConversationClassifier.EMOTIONAL_PATTERNS
+        )
+        if not has_emotional_words and any(
+            ConversationClassifier._contains_pattern(text, pattern)
+            for pattern in ConversationClassifier.INFORMATIONAL_PATTERNS
+        ):
             return "informational"
         
         # 3. Emotional/therapy mode check
-        if any(pattern in text for pattern in ConversationClassifier.EMOTIONAL_PATTERNS):
+        if any(ConversationClassifier._contains_pattern(text, pattern) for pattern in ConversationClassifier.EMOTIONAL_PATTERNS):
             return "emotional"
         
         # 4. Casual/small talk check
-        if any(pattern in text for pattern in ConversationClassifier.CASUAL_PATTERNS):
+        if any(ConversationClassifier._contains_pattern(text, pattern) for pattern in ConversationClassifier.CASUAL_PATTERNS):
             # But if message is long or has depth, might still be emotional
             if len(text) > 50 and not any(casual in text for casual in ["how are you", "how ru", "hi", "hey", "hello"]):
                 return "emotional"  # Long message likely has substance
